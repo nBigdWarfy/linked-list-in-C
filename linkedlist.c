@@ -1,115 +1,123 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#define data_size 128
+#define buffer_size 128
 
 // Define a structure for a linked list node containing a double value and a pointer to the next node.
-struct node { 
-    double data;
+struct node {
+    char data[data_size];
     struct node *next;
 };
-typedef struct node *node; // Define a pointer to the node structure as 'node'.
-node head = NULL; // Initialize a global variable 'head' as NULL, representing the head of the linked list.
+typedef struct node *Node; // Define a pointer to the node structure as 'Node'.
+Node head = NULL; // Initialize a global variable 'head' as NULL, representing the head of the linked list.
 
 // Define a structure to hold file names.
 struct fileArray {
-    char name[110];
+    char name[data_size];
 };
-typedef struct fileArray fileArray; // Typedef the structure as 'fileArray'.
-fileArray filenamesArray[256]; // Initialize an array to hold file names.
-int filesNum; // Initialize a variable to hold the number of files.
+typedef struct fileArray FileArray; // Typedef the structure as 'FileArray'.
+FileArray filenamesArray[data_size]; // Initialize an array to hold file names.
+int filesNum = 0; // Initialize a variable to hold the number of files.
 
 // Function to create a new node with the given value and return a pointer to it.
-node createNode(double value) {
-    node newNode = (node)malloc(sizeof(struct node));  
+Node createNode(char value[data_size]) {
+    Node newNode = (Node)malloc(sizeof(struct node));
     if (newNode == NULL) {
         printf("Memory allocation error.\n");
         return NULL;
     }
-    newNode->data = value;
+    strcpy(newNode->data, value);
     newNode->next = NULL;
-    return newNode; 
+    return newNode;
 }
 
 // Function to add a new node with the given value to the end of the linked list.
-void addNode(node head, double value) { 
-    node newNode, ptr;
+void addNode(Node head, char value[data_size]) {
+    Node newNode, ptr;
     ptr = head;
     newNode = createNode(value);
-    while (ptr->next) { 
-        ptr = ptr->next; 
+    if (ptr == NULL) {
+        head = newNode;
+        return;
     }
-    ptr->next = newNode; 
+    while (ptr->next) {
+        ptr = ptr->next;
+    }
+    ptr->next = newNode;
 }
 
 // Function to print the elements of the linked list to a file.
-void printList(node *head, FILE *file) {
+void printList(Node head, FILE *file) {
     if (head == NULL) {
         printf("The list is empty.");
         return;
     }
-    node current = *head;
+    Node current = head;
     while (current) {
-        fprintf(file, "%.1lf\n", current->data); 
+        fprintf(file, "%s\n", current->data);
         current = current->next;
     }
 }
 
 // Function to free the memory allocated for the linked list nodes.
-void freeMemory(node *head) {
-    node current = *head;
-    while(current) {
-        node next = current->next;
+void freeMemory(Node head) {
+    Node current = head;
+    while (current) {
+        Node next = current->next;
         free(current);
         current = next;
     }
-    *head = NULL;
 }
 
 // Function to save the elements of the linked list to a file.
-void saveFile(node *head, const char *filename) { 
-    char filenameWithExt[110];
-    snprintf(filenameWithExt, sizeof(filenameWithExt), "%s.txt", filename); 
-    FILE *file = fopen(filenameWithExt, "w"); 
+void saveFile(Node head, const char *filename) {
+    char filenameWithExt[data_size];
+    snprintf(filenameWithExt, sizeof(filenameWithExt), "%s.txt", filename);
+    FILE *file = fopen(filenameWithExt, "w");
     if (file == NULL) {
         printf("Error creating file.\n");
         return;
     }
-    printList(head, file); 
+    printList(head, file);
     fclose(file);
-    printf("List succesfully saved in the file %s.\n", filenameWithExt);
+    printf("List successfully saved in the file %s.\n", filenameWithExt);
 }
 
 // Function to load elements from a file into the linked list.
-void loadFile(node *head, const char *filename) { 
-    char filenameWithExt[110];
+void loadFile(Node *head, const char *filename) {
+    char filenameWithExt[data_size];
     snprintf(filenameWithExt, sizeof(filenameWithExt), "%s.txt", filename);
-    FILE *file = fopen(filenameWithExt, "r"); 
+    FILE *file = fopen(filenameWithExt, "r");
     if (file == NULL) {
         printf("Opening file error.\n");
         return;
     }
-    double value;
-    while (fscanf(file, "%lf", &value) == 1) { 
+    char value[data_size];
+    while (fscanf(file, "%s", value) == 1) {
         if (*head == NULL) {
-            *head = createNode(value); 
+            *head = createNode(value);
         } else {
-            addNode(*head, value); 
+            addNode(*head, value);
         }
-        printf("%.1lf\n", value);
+        printf("%s\n", value);
     }
     fclose(file);
     printf("List loaded successfully from the file.\n");
 }
 
 // Function to delete all elements of the linked list.
-void deleteList(node *head) {
-    char answer[5];
+void deleteList(Node *head) {
+    char answer[2];
     printf("Do you want to delete all the list data? (Y/N)\n");
-    scanf(" %4s", answer);
-    system("cls");
+    scanf(" %1s", answer);
     if (strcmp(answer, "y") == 0 || strcmp(answer, "Y") == 0) {
-        freeMemory(head);
-        printf("The list was succesfully cleaned.\n");
+        freeMemory(*head);
+        *head = NULL;
+        printf("The list was successfully cleaned.\n");
     } else if (strcmp(answer, "n") == 0 || strcmp(answer, "N") == 0) {
         printf("The list was not cleaned.\n");
     } else {
@@ -128,22 +136,22 @@ void clearInputBuffer() {
 void screen() {
     printf("\nPress enter to continue...");
     fflush(stdin);
-    getchar(); 
+    getchar();
     system("cls");
 }
 
 // Function to save the linked list to a file with a given filename.
-void saveList(node *head, const char *filename) {
-    char bufferFile[110];
+void saveList(Node head, const char *filename) {
+    char bufferFile[buffer_size];
     snprintf(bufferFile, sizeof(bufferFile), "%s", filename);
     FILE *file = fopen(bufferFile, "w");
     if (file == NULL) {
-        printf("Error creating file.");
+        printf("Error creating file.\n");
         return;
     }
     printList(head, file);
     fclose(file);
-    if (filesNum < sizeof(filenamesArray) / sizeof(filenamesArray[0])) {
+    if ((size_t)filesNum < sizeof(filenamesArray) / sizeof(filenamesArray[0])) {
         strcpy(filenamesArray[filesNum].name, filename);
         filesNum++;
     } else {
@@ -152,27 +160,27 @@ void saveList(node *head, const char *filename) {
 }
 
 // Function to load a linked list from a file with a given filename.
-void loadList(node *head, const char *filename) {
+void loadList(Node *head, const char *filename) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        printf("Error opening file");
+        printf("Error opening file.\n");
         return;
     }
-    double value = 0;
-    while (fscanf(file, "%lf", &value) == 1) {
+    char value[data_size];
+    while (fscanf(file, "%s", value) == 1) {
         if (*head == NULL) {
             *head = createNode(value);
         } else {
             addNode(*head, value);
         }
-        printf("%lf\n", value);
+        printf("%s\n", value);
     }
     fclose(file);
-    printf("List loaded succesfully from the file.\n");
+    printf("List loaded successfully from the file.\n");
 }
 
 // Function to handle the creation or loading of a new list.
-void newList(node *head) {
+void newList(Node *head) {
     int option;
     printf("Do you want to save or load a list?\n1. Save\n2. Load\n3. Back\n");
     scanf("%d", &option);
@@ -184,8 +192,8 @@ void newList(node *head) {
             clearInputBuffer();
             fgets(filenameSave, sizeof(filenameSave), stdin);
             filenameSave[strcspn(filenameSave, "\n")] = '\0';
-            saveList(head, filenameSave);
-            
+            saveList(*head, filenameSave);
+
             screen();
             break;
 
@@ -211,11 +219,11 @@ void newList(node *head) {
 // Main function controlling the menu-driven program.
 int main() {
     int option;
-    double value;
+    char data[data_size];
 
-    while (1) {
+    while (true) {
         printf("\nMenu:\n");
-        printf("1. Add a new value in the list\n");
+        printf("1. Add a new data in the list\n");
         printf("2. Print the list\n");
         printf("3. Save the list in a file\n");
         printf("4. Load a list file\n");
@@ -227,14 +235,14 @@ int main() {
 
         switch (option) {
             case 1:
-                printf("\nEnter the value: ");
-                scanf("%lf", &value);
+                printf("\nEnter the data: ");
+                scanf("%s", data);
                 if (head == NULL) {
-                    head = createNode(value); 
+                    head = createNode(data);
                 } else {
-                    addNode(head, value); 
+                    addNode(head, data);
                 }
-                printf("\nSuccessfully added value.");
+                printf("\nSuccessfully added data.");
                 screen();
                 break;
 
@@ -244,7 +252,7 @@ int main() {
                 } else {
                     system("cls");
                     printf("List:\n");
-                    printList(&head, stdout); 
+                    printList(head, stdout);
                 }
                 screen();
                 break;
@@ -254,27 +262,27 @@ int main() {
                 if (head == NULL) {
                     printf("The list is empty, there is no data to save.\n");
                 } else {
-                    char filenameSave[100];
+                    char filenameSave[data_size];
                     printf("Enter the file name to save the list:\n");
                     clearInputBuffer();
                     fgets(filenameSave, sizeof(filenameSave), stdin);
                     filenameSave[strcspn(filenameSave, "\n")] = '\0';
-                    saveFile(&head, filenameSave);
+                    saveFile(head, filenameSave);
                 }
                 screen();
                 break;
 
             case 4:
                 system("cls");
-                char filenameLoad[100];
+                char filenameLoad[data_size];
                 printf("Enter the file name to load the list:\n");
                 clearInputBuffer();
                 fgets(filenameLoad, sizeof(filenameLoad), stdin);
                 filenameLoad[strcspn(filenameLoad, "\n")] = '\0';
-                loadFile(&head, filenameLoad); 
-                screen(); 
+                loadFile(&head, filenameLoad);
+                screen();
                 break;
-            
+
             case 5:
                 system("cls");
                 if (head == NULL) {
@@ -293,9 +301,9 @@ int main() {
             case 9:
                 printf("\nEnding the program.");
                 for (int i = 0; i < filesNum; i++) {
-                    remove(filenamesArray[i].name); 
+                    remove(filenamesArray[i].name);
                 }
-                freeMemory(&head);
+                freeMemory(head);
                 screen();
                 return 0;
 
