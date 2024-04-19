@@ -26,12 +26,15 @@ int filesNum = 0; // Initialize a variable to hold the number of files.
 // Function to create a new node with the given value and return a pointer to it.
 Node createNode(char value[data_size]) {
     Node newNode = (Node)malloc(sizeof(struct node));
+
     if (newNode == NULL) {
         printf("Memory allocation error.\n");
         return NULL;
     }
+
     strcpy(newNode->data, value);
     newNode->next = NULL;
+
     return newNode;
 }
 
@@ -39,11 +42,14 @@ Node createNode(char value[data_size]) {
 void addNode(Node head, char value[data_size]) {
     Node newNode, ptr;
     ptr = head;
+
     newNode = createNode(value);
+
     if (ptr == NULL) {
         head = newNode;
         return;
     }
+
     while (ptr->next) {
         ptr = ptr->next;
     }
@@ -57,6 +63,7 @@ void printList(Node head, FILE *file) {
         return;
     }
     Node current = head;
+    
     while (current) {
         fprintf(file, "%s\n", current->data);
         current = current->next;
@@ -66,6 +73,7 @@ void printList(Node head, FILE *file) {
 // Function to free the memory allocated for the linked list nodes.
 void freeMemory(Node head) {
     Node current = head;
+    
     while (current) {
         Node next = current->next;
         free(current);
@@ -76,27 +84,33 @@ void freeMemory(Node head) {
 // Function to save the elements of the linked list to a file.
 void saveFile(Node head, const char *filename) {
     char filenameWithExt[data_size];
+
     snprintf(filenameWithExt, sizeof(filenameWithExt), "%s.txt", filename);
     FILE *file = fopen(filenameWithExt, "w");
+    
     if (file == NULL) {
         printf("Error creating file.\n");
         return;
     }
     printList(head, file);
     fclose(file);
+
     printf("List successfully saved in the file %s.\n", filenameWithExt);
 }
 
 // Function to load elements from a file into the linked list.
 void loadFile(Node *head, const char *filename) {
     char filenameWithExt[data_size];
+    char value[data_size];
+
     snprintf(filenameWithExt, sizeof(filenameWithExt), "%s.txt", filename);
     FILE *file = fopen(filenameWithExt, "r");
+    
     if (file == NULL) {
         printf("Opening file error.\n");
         return;
     }
-    char value[data_size];
+    
     while (fscanf(file, "%s", value) == 1) {
         if (*head == NULL) {
             *head = createNode(value);
@@ -106,14 +120,17 @@ void loadFile(Node *head, const char *filename) {
         printf("%s\n", value);
     }
     fclose(file);
+
     printf("List loaded successfully from the file.\n");
 }
 
 // Function to delete all elements of the linked list.
 void deleteList(Node *head) {
-    char answer[2];
-    printf("Do you want to delete all the list data? (Y/N)\n");
+    char answer[8];
+
+    printf("Do you want to delete all the list data? (Yes/No)\n");
     scanf(" %1s", answer);
+    
     if (strcmp(answer, "y") == 0 || strcmp(answer, "Y") == 0) {
         freeMemory(*head);
         *head = NULL;
@@ -128,12 +145,11 @@ void deleteList(Node *head) {
 // Function to clear the input buffer.
 void clearInputBuffer() {
     int c;
-    while ((c = getchar()) != '\n' && c != EOF) {
-    }
+    while ((c = getchar()) != '\n' && c != EOF);
 }
 
 // Function to display a message and wait for user confirmation before clearing the screen.
-void screen() {
+void clearScreen() {
     printf("\nPress enter to continue...");
     fflush(stdin);
     getchar();
@@ -143,14 +159,17 @@ void screen() {
 // Function to save the linked list to a file with a given filename.
 void saveList(Node head, const char *filename) {
     char bufferFile[buffer_size];
+
     snprintf(bufferFile, sizeof(bufferFile), "%s", filename);
     FILE *file = fopen(bufferFile, "w");
+    
     if (file == NULL) {
         printf("Error creating file.\n");
         return;
     }
     printList(head, file);
     fclose(file);
+    
     if ((size_t)filesNum < sizeof(filenamesArray) / sizeof(filenamesArray[0])) {
         strcpy(filenamesArray[filesNum].name, filename);
         filesNum++;
@@ -161,12 +180,15 @@ void saveList(Node head, const char *filename) {
 
 // Function to load a linked list from a file with a given filename.
 void loadList(Node *head, const char *filename) {
+    char value[data_size];
+
     FILE *file = fopen(filename, "r");
+    
     if (file == NULL) {
         printf("Error opening file.\n");
         return;
     }
-    char value[data_size];
+
     while (fscanf(file, "%s", value) == 1) {
         if (*head == NULL) {
             *head = createNode(value);
@@ -175,43 +197,52 @@ void loadList(Node *head, const char *filename) {
         }
         printf("%s\n", value);
     }
-    fclose(file);
+
     printf("List loaded successfully from the file.\n");
+    fclose(file);
 }
 
 // Function to handle the creation or loading of a new list.
 void newList(Node *head) {
     int option;
+
     printf("Do you want to save or load a list?\n1. Save\n2. Load\n3. Back\n");
     scanf("%d", &option);
+    
     switch (option) {
         case 1:
             system("cls");
-            char filenameSave[100];
+            char filenameSave[data_size];
+
             printf("Enter the file's name: ");
             clearInputBuffer();
+            
             fgets(filenameSave, sizeof(filenameSave), stdin);
             filenameSave[strcspn(filenameSave, "\n")] = '\0';
             saveList(*head, filenameSave);
+            clearScreen();
 
-            screen();
             break;
 
         case 2:
             system("cls");
-            char listnameLoad[100];
+            char listnameLoad[data_size];
+            
             printf("Enter the file's name: ");
             clearInputBuffer();
+
             fgets(listnameLoad, sizeof(listnameLoad), stdin);
             listnameLoad[strcspn(listnameLoad, "\n")] = '\0';
             loadList(head, listnameLoad);
-            screen();
+            clearScreen();
+
             break;
 
         default:
             system("cls");
             printf("Getting back to the previous menu.\n");
-            screen();
+            clearScreen();
+
             break;
     }
 }
@@ -237,13 +268,15 @@ int main() {
             case 1:
                 printf("\nEnter the data: ");
                 scanf("%s", data);
+
                 if (head == NULL) {
                     head = createNode(data);
                 } else {
                     addNode(head, data);
                 }
                 printf("\nSuccessfully added data.");
-                screen();
+                clearScreen();
+
                 break;
 
             case 2:
@@ -254,11 +287,13 @@ int main() {
                     printf("List:\n");
                     printList(head, stdout);
                 }
-                screen();
+                clearScreen();
+
                 break;
 
             case 3:
                 system("cls");
+
                 if (head == NULL) {
                     printf("The list is empty, there is no data to save.\n");
                 } else {
@@ -267,49 +302,60 @@ int main() {
                     clearInputBuffer();
                     fgets(filenameSave, sizeof(filenameSave), stdin);
                     filenameSave[strcspn(filenameSave, "\n")] = '\0';
+                    
                     saveFile(head, filenameSave);
                 }
-                screen();
+                clearScreen();
+
                 break;
 
             case 4:
                 system("cls");
+
                 char filenameLoad[data_size];
+                
                 printf("Enter the file name to load the list:\n");
                 clearInputBuffer();
                 fgets(filenameLoad, sizeof(filenameLoad), stdin);
                 filenameLoad[strcspn(filenameLoad, "\n")] = '\0';
                 loadFile(&head, filenameLoad);
-                screen();
+                clearScreen();
+
                 break;
 
             case 5:
                 system("cls");
+
                 if (head == NULL) {
                     printf("The list is empty, there is no data to delete.\n");
                 } else {
                     deleteList(&head);
                 }
-                screen();
+                clearScreen();
+
                 break;
 
             case 6:
                 system("cls");
                 newList(&head);
+
                 break;
 
             case 9:
                 printf("\nEnding the program.");
+
                 for (int i = 0; i < filesNum; i++) {
                     remove(filenamesArray[i].name);
                 }
                 freeMemory(head);
-                screen();
+                clearScreen();
+
                 return 0;
 
             default:
-                printf("\nInvalid input! Try again.");
-                screen();
+                printf("\nInvalid input.");
+                clearScreen();
+
                 break;
         }
     }
